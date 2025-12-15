@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+env/
+
+# Environment
+.env
+
+# FAISS / Memory
+memory.index
+memory.json
+
+# OS
+.DS_Store

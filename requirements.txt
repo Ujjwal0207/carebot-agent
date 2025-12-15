@@ -1,0 +1,6 @@
+autogen~=0.3
+faiss-cpu
+sentence-transformers
+python-dotenv
+fastapi
+uvicorn

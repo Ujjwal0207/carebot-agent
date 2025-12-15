@@ -21,7 +21,10 @@ async def websocket_endpoint(ws: WebSocket):
         while True:
             user_msg = await ws.receive_text()
 
-            await ws.send_text(json.dumps({"type": "thinking"}))
+            # Tell frontend we are processing
+            await ws.send_text(json.dumps({
+                "type": "thinking"
+            }))
 
             reply = await run_agent(user_msg)
 
@@ -29,7 +32,15 @@ async def websocket_endpoint(ws: WebSocket):
                 "type": "final",
                 "content": reply
             }))
+
     except Exception as e:
+        # ✅ LOG ERROR
         print("WebSocket error:", e)
         traceback.print_exc()
-        await ws.close()
+
+        # ❌ DO NOT close socket here
+        # Browser will reconnect automatically if needed
+        await ws.send_text(json.dumps({
+            "type": "error",
+            "content": "An error occurred. Please try again."
+        }))

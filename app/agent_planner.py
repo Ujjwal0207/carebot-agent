@@ -1,5 +1,3 @@
-# app/agent_planner.py
-
 def planner_prompt(user_message: str) -> str:
     return f"""
 You are a planning assistant.

@@ -1,9 +1,8 @@
-import asyncio
-import uuid
+import json
 import os
 
 from app.agent_care import create_carebot
-from app.agent_planner import create_plannerbot
+from app.agent_memory_extractor import create_memory_extractor
 from app.router import route_message
 from app.rag import build_context
 from app.memory import save_memory
@@ -11,77 +10,92 @@ from config.llm_config import config_list
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-# ----------------------------
-# Create agents ONCE (IMPORTANT)
-# ----------------------------
 llm_config = {"config_list": config_list}
 
 carebot = create_carebot(llm_config)
-plannerbot = create_plannerbot(llm_config)
+memory_extractor = create_memory_extractor(llm_config)
 
 
-# ----------------------------
-# Helper: extract text from ChatResult
-# ----------------------------
-def extract_text(chat_result) -> str:
-    if hasattr(chat_result, "chat_history") and chat_result.chat_history:
-        return chat_result.chat_history[-1]["content"]
-    return "No response generated."
+def planner_prompt(user_message: str) -> str:
+    return f"""
+You are a planning assistant.
+Output short bullet-point steps only.
+No emotional language.
+No repetition.
+
+User message:
+{user_message}
+"""
 
 
-# ----------------------------
-# This is what FastAPI calls
-# ----------------------------
 async def run_agent(user_message: str) -> str:
     session_id = "web-session"
 
-    # Save memory (FAISS)
-    save_memory(
-        "User lost their mother and feels emotionally lost",
-        category="emotional"
-    )
-
-    # Build RAG context
-    context = await build_context(session_id, user_message)
-
-    # Route message
     routed = route_message(user_message)
 
-    final_prompt = context
+    if routed == "safety":
+        return (
+            "I'm really glad you shared this. "
+            "You don’t have to face this alone."
+        )
 
-    message = {
-        "role": "user",
-        "content": final_prompt
-    }
+    # ✅ FIX 1: await build_context
+    context = await build_context(session_id, user_message)
+    system_msg = {"role": "system", "content": context["system"]}
 
-    # Correct Autogen chat usage
+    user_content = user_message
     if routed == "planner":
-        chat_result = await plannerbot.a_initiate_chat(
-            carebot,
-            message=message,
-            max_turns=1
-        )
-    else:
-        chat_result = await carebot.a_initiate_chat(
-            plannerbot,
-            message=message,
-            max_turns=1
-        )
+        plan = planner_prompt(user_message)
+        user_content = f"""
+User message:
+{user_message}
 
-    # 🔥 RETURN ONLY TEXT (THIS FIXES YOUR UI)
-    return extract_text(chat_result)
+Planner suggestions:
+{plan}
 
+Respond empathetically and practically.
+"""
 
-# ----------------------------
-# CLI test (optional)
-# ----------------------------
-async def main():
-    reply = await run_agent(
-        "I still feel lost after my mother's death. What should I do?"
+    # ✅ FIX 2: generate_reply WITHOUT await
+    reply = carebot.generate_reply(
+        messages=[
+            system_msg,
+            {"role": "user", "content": user_content}
+        ]
     )
-    print("\nAGENT RESPONSE:\n")
-    print(reply)
 
+    # ✅ FIX 3: handle None safely (CRITICAL)
+    if not reply:
+        reply = (
+            "I’m here with you. "
+            "Can you tell me a bit more about what you’re experiencing?"
+        )
 
-if __name__ == "__main__":
-    asyncio.run(main())
+    final_response = reply.strip()
+
+    # ✅ Memory extraction (safe)
+    try:
+        memory_reply = memory_extractor.generate_reply(
+            messages=[
+                {
+                    "role": "user",
+                    "content": f"""
+Conversation:
+User: {user_message}
+Assistant: {final_response}
+"""
+                }
+            ]
+        )
+
+        if memory_reply:
+            parsed = json.loads(memory_reply)
+            if parsed.get("save"):
+                save_memory(
+                    parsed["summary"],
+                    parsed.get("category", "general")
+                )
+    except Exception:
+        pass
+
+    return final_response

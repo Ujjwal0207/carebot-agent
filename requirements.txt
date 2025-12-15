@@ -4,3 +4,5 @@ sentence-transformers
 python-dotenv
 fastapi
 uvicorn
+ollama
+fix-busted-json

@@ -33,8 +33,9 @@ def save_memory(text: str, category: str = "general"):
     })
 
     faiss.write_index(index, INDEX_FILE)
+
     with open(DATA_FILE, "w") as f:
-        json.dump(memory_store, f)
+        json.dump(memory_store, f, indent=2)  # 👈 readable
 
 
 async def get_relevant_facts(session_id: str, query: str, k: int = 3):
@@ -42,7 +43,7 @@ async def get_relevant_facts(session_id: str, query: str, k: int = 3):
         return ""
 
     query_embedding = embedder.encode([query])
-    distances, indices = index.search(
+    _, indices = index.search(
         np.array(query_embedding).astype("float32"), k
     )
 

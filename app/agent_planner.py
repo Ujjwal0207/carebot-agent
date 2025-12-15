@@ -1,10 +1,12 @@
-from autogen import ConversableAgent
+# app/agent_planner.py
 
-def create_plannerbot(llm_config):
-    return ConversableAgent(
-        name="PlannerBot",
-        system_message="You suggest small, practical steps to help the user.",
-        llm_config=llm_config,
-        human_input_mode="NEVER",
-        is_termination_msg=lambda x: True
-    )
+def planner_prompt(user_message: str) -> str:
+    return f"""
+You are a planning assistant.
+Give short bullet-point steps only.
+No emotional language.
+No repetition.
+
+User message:
+{user_message}
+"""

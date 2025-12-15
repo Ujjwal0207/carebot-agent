@@ -2,21 +2,46 @@
 <html>
 <body>
 <h2>CareBot (Ollama)</h2>
+
 <input id="msg" placeholder="Type here..." />
 <button onclick="send()">Send</button>
+
 <ul id="chat"></ul>
 
 <script>
 const ws = new WebSocket("ws://localhost:8000/ws");
+const chat = document.getElementById("chat");
+let thinking = null;
 
 ws.onmessage = e => {
-  const li = document.createElement("li");
-  li.innerText = e.data;
-  document.getElementById("chat").appendChild(li);
+  const d = JSON.parse(e.data);
+
+  if (d.type === "thinking") {
+    thinking = document.createElement("li");
+    thinking.innerText = "🤖 Thinking...";
+    chat.appendChild(thinking);
+  }
+
+  if (d.type === "final") {
+    thinking?.remove();
+    thinking = null;
+
+    const li = document.createElement("li");
+    li.innerText = "🤖 " + d.content;
+    chat.appendChild(li);
+  }
 };
 
 function send() {
-  ws.send(document.getElementById("msg").value);
+  const i = document.getElementById("msg");
+  if (!i.value.trim()) return;
+
+  const li = document.createElement("li");
+  li.innerText = "🧑 " + i.value;
+  chat.appendChild(li);
+
+  ws.send(i.value);
+  i.value = "";
 }
 </script>
 </body>

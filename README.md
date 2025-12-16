@@ -27,30 +27,67 @@ This is **not a simple chatbot** — it is a **multi-agent AI system** designed 
 
 ## 🏗️ High-Level Architecture
 
-User (Browser UI)
-        |
-        | WebSocket
-        v
-FastAPI Server (web/server.py)
-        |
-        v
-run_agent()  ──► Router
-        |           |
-        |           ├── Safety Handling
-        |           ├── Care Mode
-        |           └── Planner Mode
-        |
-        v
-RAG Context Builder (rag.py)
-        |
-        v
-CareBot Agent (AutoGen + Ollama)
-        |
-        v
-Memory Extractor Agent
-        |
-        v
-Response → WebSocket → UI
+┌──────────────────────┐
+│      Browser UI      │
+│  (HTML + JavaScript) │
+└──────────┬───────────┘
+           │  WebSocket
+           ▼
+┌────────────────────────────┐
+│      FastAPI Server        │
+│   web/server.py            │
+│  • WebSocket handling      │
+│  • Session management      │
+└──────────┬─────────────────┘
+           │
+           ▼
+┌────────────────────────────┐
+│     Agent Orchestrator     │
+│        app/main.py         │
+│  • run_agent()             │
+│  • Conversation lifecycle │
+└──────────┬─────────────────┘
+           │
+           ▼
+┌────────────────────────────┐
+│        Intent Router       │
+│        app/router.py       │
+│  ┌──────────┬───────────┐ │
+│  │ Safety   │  Care     │ │
+│  │ Handling │  Mode     │ │
+│  └──────────┴───────────┘ │
+│          Planner Mode      │
+└──────────┬─────────────────┘
+           │
+           ▼
+┌────────────────────────────┐
+│   RAG Context Builder      │
+│        app/rag.py          │
+│  • Memory retrieval        │
+│  • Context injection      │
+└──────────┬─────────────────┘
+           │
+           ▼
+┌────────────────────────────┐
+│      CareBot Agent         │
+│  (AutoGen + Ollama LLM)    │
+│  • Empathetic responses   │
+│  • Structured reasoning   │
+└──────────┬─────────────────┘
+           │
+           ▼
+┌────────────────────────────┐
+│  Memory Extractor Agent    │
+│  • JSON memory decisions  │
+│  • Long-term storage      │
+└──────────┬─────────────────┘
+           │
+           ▼
+┌────────────────────────────┐
+│   Response to WebSocket    │
+│        → Browser UI        │
+└────────────────────────────┘
+
 
 
 
@@ -120,46 +157,46 @@ Memory | JSON (extensible to FAISS) |
 ---
 
 ## 📂 Project Structure
-
 carebot-agent/
 │
 ├── app/
-│   ├── main.py                  # Core orchestration
-│   ├── router.py                # Intent routing
-│   ├── rag.py                   # Context builder
-│   ├── memory.py                # Memory storage
-│   ├── agent_care.py
-│   ├── agent_memory_extractor.py
-│   ├── safety.py
-│   └── tools.py
+│   ├── main.py                    # Core agent orchestration
+│   ├── router.py                  # Intent classification & routing
+│   ├── rag.py                     # Retrieval-Augmented Generation
+│   ├── memory.py                  # Memory persistence layer
+│   ├── agent_care.py              # Empathetic CareBot agent
+│   ├── agent_memory_extractor.py  # Long-term memory extraction agent
+│   ├── safety.py                  # Safety & crisis handling logic
+│   └── tools.py                   # Shared utilities
 │
 ├── web/
-│   ├── server.py                # FastAPI + WebSocket
-│   └── index.html               # UI
+│   ├── server.py                  # FastAPI + WebSocket server
+│   └── index.html                 # Minimal real-time UI
 │
 ├── config/
-│   └── llm_config.py            # Ollama config
+│   └── llm_config.py              # Ollama / LLM configuration
 │
-├── memory.json
-├── requirements.txt
+├── memory.json                    # Persistent long-term memory
+├── requirements.txt               # Python dependencies
 └── README.md
 
 
----
+⚙️ Installation & Setup
 
-## ⚙️ Installation & Setup
+1️⃣ Clone the Repository
 
-### 1️⃣ Clone the Repository
-```bash
 git clone https://github.com/Ujjwal0207/carebot-agent.git
 cd carebot-agent
 
 2️⃣ Create Virtual Environment
+
 python3 -m venv .venv
+
 source .venv/bin/activate     # macOS/Linux
 .venv\Scripts\activate        # Windows
 
 3️⃣ Install Dependencies
+
 pip install -r requirements.txt
 
 🧠 Install Ollama (Local LLM)
@@ -186,9 +223,11 @@ config_list = [
     }
 ]
 
-▶️ Run the Application
+▶️ Run the Application:
+
 uvicorn web.server:app --reload
 
 
-Open in browser:
+▶️ Open in browser:
+
 http://127.0.0.1:8000

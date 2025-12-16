@@ -27,68 +27,28 @@ This is **not a simple chatbot** — it is a **multi-agent AI system** designed 
 
 ## 🏗️ High-Level Architecture
 
-┌──────────────────────┐
-│      Browser UI      │
-│  (HTML + JavaScript) │
-└──────────┬───────────┘
-           │  WebSocket
-           ▼
-┌────────────────────────────┐
-│      FastAPI Server        │
-│   web/server.py            │
-│  • WebSocket handling      │
-│  • Session management      │
-└──────────┬─────────────────┘
-           │
-           ▼
-┌────────────────────────────┐
-│     Agent Orchestrator     │
-│        app/main.py         │
-│  • run_agent()             │
-│  • Conversation lifecycle │
-└──────────┬─────────────────┘
-           │
-           ▼
-┌────────────────────────────┐
-│        Intent Router       │
-│        app/router.py       │
-│  ┌──────────┬───────────┐ │
-│  │ Safety   │  Care     │ │
-│  │ Handling │  Mode     │ │
-│  └──────────┴───────────┘ │
-│          Planner Mode      │
-└──────────┬─────────────────┘
-           │
-           ▼
-┌────────────────────────────┐
-│   RAG Context Builder      │
-│        app/rag.py          │
-│  • Memory retrieval        │
-│  • Context injection      │
-└──────────┬─────────────────┘
-           │
-           ▼
-┌────────────────────────────┐
-│      CareBot Agent         │
-│  (AutoGen + Ollama LLM)    │
-│  • Empathetic responses   │
-│  • Structured reasoning   │
-└──────────┬─────────────────┘
-           │
-           ▼
-┌────────────────────────────┐
-│  Memory Extractor Agent    │
-│  • JSON memory decisions  │
-│  • Long-term storage      │
-└──────────┬─────────────────┘
-           │
-           ▼
-┌────────────────────────────┐
-│   Response to WebSocket    │
-│        → Browser UI        │
-└────────────────────────────┘
+flowchart TD
+    U[User<br/>(Browser UI)] -->|WebSocket| WS[FastAPI Server<br/>web/server.py]
 
+    WS --> ORCH[Agent Orchestrator<br/>app/main.py<br/>run_agent()]
 
+    ORCH --> ROUTER[Intent Router<br/>app/router.py]
+
+    ROUTER -->|Safety| SAFE[Safety Handler<br/>safety.py]
+    ROUTER -->|Care| CARE[Care Mode]
+    ROUTER -->|Planner| PLAN[Planner Mode]
+
+    CARE --> RAG[RAG Context Builder<br/>rag.py]
+    PLAN --> RAG
+
+    RAG --> AGENT[CareBot Agent<br/>AutoGen + Ollama]
+
+    AGENT --> MEM[Memory Extractor Agent<br/>JSON Output]
+
+    MEM --> STORE[Long-Term Memory<br/>memory.json]
+
+    AGENT -->|Response| WS
+    WS -->|WebSocket| U
 
 
 ## 🤖 Agents in This System
@@ -157,28 +117,30 @@ Memory | JSON (extensible to FAISS) |
 ---
 
 ## 📂 Project Structure
+
 carebot-agent/
 │
-├── app/
-│   ├── main.py                    # Core agent orchestration
-│   ├── router.py                  # Intent classification & routing
-│   ├── rag.py                     # Retrieval-Augmented Generation
-│   ├── memory.py                  # Memory persistence layer
-│   ├── agent_care.py              # Empathetic CareBot agent
-│   ├── agent_memory_extractor.py  # Long-term memory extraction agent
-│   ├── safety.py                  # Safety & crisis handling logic
-│   └── tools.py                   # Shared utilities
+├── app/                          # Core AI logic
+│   ├── main.py                   # Agent orchestration
+│   ├── router.py                 # Intent classification & routing
+│   ├── rag.py                    # Retrieval-Augmented Generation (RAG)
+│   ├── memory.py                 # Memory persistence layer
+│   ├── agent_care.py             # Empathetic CareBot agent
+│   ├── agent_memory_extractor.py # Long-term memory extraction agent
+│   ├── safety.py                 # Safety & crisis handling logic
+│   └── tools.py                  # Shared utilities
 │
-├── web/
-│   ├── server.py                  # FastAPI + WebSocket server
-│   └── index.html                 # Minimal real-time UI
+├── web/                          # Web layer
+│   ├── server.py                 # FastAPI + WebSocket server
+│   └── index.html                # Minimal real-time UI
 │
 ├── config/
-│   └── llm_config.py              # Ollama / LLM configuration
+│   └── llm_config.py             # Ollama / LLM configuration
 │
-├── memory.json                    # Persistent long-term memory
-├── requirements.txt               # Python dependencies
+├── memory.json                   # Persistent long-term memory
+├── requirements.txt              # Python dependencies
 └── README.md
+
 
 
 ⚙️ Installation & Setup

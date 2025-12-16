@@ -26,29 +26,37 @@ This is **not a simple chatbot** — it is a **multi-agent AI system** designed 
 ---
 
 ## 🏗️ High-Level Architecture
-
 flowchart TD
-    U[User<br/>(Browser UI)] -->|WebSocket| WS[FastAPI Server<br/>web/server.py]
+    U[User<br/>(Browser UI)]
+    WS[FastAPI Server<br/>web/server.py]
+    ORCH[Agent Orchestrator<br/>app/main.py<br/>run_agent()]
+    ROUTER[Intent Router<br/>app/router.py]
+    SAFE[Safety Handler<br/>safety.py]
+    CARE[Care Mode]
+    PLAN[Planner Mode]
+    RAG[RAG Context Builder<br/>rag.py]
+    AGENT[CareBot Agent<br/>AutoGen + Ollama]
+    MEM[Memory Extractor Agent<br/>JSON Output]
+    STORE[Long-Term Memory<br/>memory.json]
 
-    WS --> ORCH[Agent Orchestrator<br/>app/main.py<br/>run_agent()]
+    U -->|WebSocket| WS
+    WS --> ORCH
+    ORCH --> ROUTER
 
-    ORCH --> ROUTER[Intent Router<br/>app/router.py]
+    ROUTER -->|Safety| SAFE
+    ROUTER -->|Care| CARE
+    ROUTER -->|Planner| PLAN
 
-    ROUTER -->|Safety| SAFE[Safety Handler<br/>safety.py]
-    ROUTER -->|Care| CARE[Care Mode]
-    ROUTER -->|Planner| PLAN[Planner Mode]
-
-    CARE --> RAG[RAG Context Builder<br/>rag.py]
+    CARE --> RAG
     PLAN --> RAG
 
-    RAG --> AGENT[CareBot Agent<br/>AutoGen + Ollama]
-
-    AGENT --> MEM[Memory Extractor Agent<br/>JSON Output]
-
-    MEM --> STORE[Long-Term Memory<br/>memory.json]
+    RAG --> AGENT
+    AGENT --> MEM
+    MEM --> STORE
 
     AGENT -->|Response| WS
     WS -->|WebSocket| U
+
 
 
 ## 🤖 Agents in This System

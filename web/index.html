@@ -12,22 +12,61 @@
 const ws = new WebSocket("ws://localhost:8000/ws");
 const chat = document.getElementById("chat");
 let thinking = null;
+let currentAssistantLi = null; // holds the <li> we stream text into
 
 ws.onmessage = e => {
   const d = JSON.parse(e.data);
 
   if (d.type === "thinking") {
+    // Show a single "Thinking..." item while backend works
     thinking = document.createElement("li");
     thinking.innerText = "🤖 Thinking...";
     chat.appendChild(thinking);
   }
 
+  if (d.type === "stream") {
+    // First streamed chunk: remove "Thinking..." and create an assistant bubble
+    if (thinking) {
+      thinking.remove();
+      thinking = null;
+    }
+
+    if (!currentAssistantLi) {
+      currentAssistantLi = document.createElement("li");
+      currentAssistantLi.innerText = "🤖 ";
+      chat.appendChild(currentAssistantLi);
+    }
+
+    // Append the next chunk so it feels token-by-token
+    currentAssistantLi.innerText += d.content;
+  }
+
   if (d.type === "final") {
-    thinking?.remove();
-    thinking = null;
+    // Ensure the thinking indicator is cleared
+    if (thinking) {
+      thinking.remove();
+      thinking = null;
+    }
+
+    // If for some reason we didn't stream, fall back to a single message
+    if (!currentAssistantLi) {
+      currentAssistantLi = document.createElement("li");
+      currentAssistantLi.innerText = "🤖 " + d.content;
+      chat.appendChild(currentAssistantLi);
+    }
+
+    currentAssistantLi = null; // conversation turn is complete
+  }
+
+  if (d.type === "error") {
+    // Clear thinking and show a simple error line
+    if (thinking) {
+      thinking.remove();
+      thinking = null;
+    }
 
     const li = document.createElement("li");
-    li.innerText = "🤖 " + d.content;
+    li.innerText = "⚠️ " + d.content;
     chat.appendChild(li);
   }
 };

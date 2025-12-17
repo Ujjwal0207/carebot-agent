@@ -164,22 +164,13 @@ The benchmark can be run locally to compare agent behavior with and without memo
 PYTHONPATH=. python benchmark_memory.py
 
 
----
 
-## ✅ 3️⃣ ADD THIS SECTION  
-**Place it AFTER:**  
-`## 🔁 Streaming Responses`
-
----
-
-```md
 ## ⚠️ Known Failure Cases
 
 - **Repetitive responses**: The agent may occasionally generate similar replies when insufficient new context is available.
 - **Memory noise**: Semantically related but irrelevant memories may be retrieved in edge cases.
 
 Automated tests and controlled benchmarking help detect regressions related to memory retrieval and response stability.
-
 
 
 ## ⚡ Real-Time WebSocket UI
@@ -189,7 +180,6 @@ Automated tests and controlled benchmarking help detect regressions related to m
 - **Streaming-style updates** (chunks arrive over WebSocket, like GPT’s token stream)
 - **No page reloads**
 
----
 
 ## 🛠 Tech Stack
 
@@ -203,7 +193,6 @@ Automated tests and controlled benchmarking help detect regressions related to m
 | Frontend | HTML + JavaScript |
 | Memory | FAISS + Sentence-Transformers (`memory.index`, `memory.json`) |
 
----
 
 ## 📂 Project Structure
 

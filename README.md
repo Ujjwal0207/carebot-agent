@@ -91,6 +91,28 @@ flowchart TD
 ```
 
 
+## Request Flow
+
+1. The user sends a message from the browser UI using a WebSocket connection.
+2. The FastAPI server receives the message and forwards it to the Agent Orchestrator.
+3. The Intent Router analyzes the user query and routes it to Safety, Care, or Planner mode.
+4. A RAG context is built using relevant long-term memory retrieved from the vector database.
+5. The CareBot Agent generates a response using the LLM and the enriched context.
+6. Important user information is extracted from the conversation and stored in long-term memory for future interactions.
+
+
+## Stateless vs Stateful Components
+
+**Stateless Components**
+- Browser UI
+- FastAPI Server
+- Agent Orchestrator
+- CareBot Agent
+
+**Stateful Components**
+- Vector Memory (FAISS) – persists long-term user information
+
+
 
 ## 🤖 Agents in This System
 
@@ -133,6 +155,32 @@ This keeps responses safe, relevant, and predictable.
 - Improves conversational continuity
 
 ---
+
+## 🧪 Benchmark Execution
+
+The benchmark can be run locally to compare agent behavior with and without memory:
+
+```bash
+PYTHONPATH=. python benchmark_memory.py
+
+
+---
+
+## ✅ 3️⃣ ADD THIS SECTION  
+**Place it AFTER:**  
+`## 🔁 Streaming Responses`
+
+---
+
+```md
+## ⚠️ Known Failure Cases
+
+- **Repetitive responses**: The agent may occasionally generate similar replies when insufficient new context is available.
+- **Memory noise**: Semantically related but irrelevant memories may be retrieved in edge cases.
+
+Automated tests and controlled benchmarking help detect regressions related to memory retrieval and response stability.
+
+
 
 ## ⚡ Real-Time WebSocket UI
 
@@ -348,6 +396,17 @@ Features:
 - Easy “Clear conversation” button in the sidebar.
 
 ---
+
+## 🧪 Testing & Validation
+
+Basic automated tests are included to validate system stability and memory behavior:
+
+- **Memory retrieval tests** ensure that stored facts can be retrieved when relevant.
+- **RAG regression tests** verify that agent responses remain non-empty and stable across runs.
+
+Tests are executed using `pytest` with async support to match the system’s execution model.
+
+
 
 ## ✅ Status & Roadmap
 

@@ -100,3 +100,22 @@ async def get_relevant_facts(session_id: str, query: str, k: int = 3):
 
     return "\n".join(results)
 
+def clear_memory():
+    """
+    Clears all stored long-term memory.
+    Used for benchmarking and testing.
+    """
+    global index, memory_store
+
+    # Reset FAISS index
+    index.reset()
+
+    # Clear in-memory store
+    memory_store.clear()
+
+    # Remove persisted files if they exist
+    if os.path.exists(INDEX_FILE):
+        os.remove(INDEX_FILE)
+
+    if os.path.exists(DATA_FILE):
+        os.remove(DATA_FILE)

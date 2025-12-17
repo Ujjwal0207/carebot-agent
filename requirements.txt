@@ -7,3 +7,5 @@ uvicorn
 streamlit
 ollama
 fix-busted-json
+pytest
+pytest-asyncio

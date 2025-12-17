@@ -91,14 +91,16 @@ flowchart TD
 ```
 
 
-## Request Flow
+## 📋 Request Flow
 
-1. The user sends a message from the browser UI using a WebSocket connection.
-2. The FastAPI server receives the message and forwards it to the Agent Orchestrator.
-3. The Intent Router analyzes the user query and routes it to Safety, Care, or Planner mode.
-4. A RAG context is built using relevant long-term memory retrieved from the vector database.
-5. The CareBot Agent generates a response using the LLM and the enriched context.
-6. Important user information is extracted from the conversation and stored in long-term memory for future interactions.
+The complete request lifecycle from user input to response:
+
+1. **User sends a message** via Browser UI using WebSocket connection
+2. **FastAPI server** receives the message and forwards it to the Agent Orchestrator
+3. **Intent Router** classifies the query into Safety, Care, or Planner mode
+4. **RAG Context Builder** retrieves relevant long-term memory from the vector database
+5. **CareBot Agent** generates a response using the LLM with enriched context
+6. **Memory Extractor** identifies important information and stores it for future use
 
 
 ## Stateless vs Stateful Components
@@ -156,14 +158,31 @@ This keeps responses safe, relevant, and predictable.
 
 ---
 
-## 🧪 Benchmark Execution
+## 📊 Evaluation & Benchmark
+
+To evaluate the effectiveness of long-term memory, the agent was benchmarked in two modes:
+
+- **Stateful execution**: Long-term memory enabled
+- **Stateless execution**: Long-term memory explicitly cleared before the run
+
+The benchmark was executed using an **asynchronous runner** to match the non-blocking design.
+
+| Mode            | Context Awareness | Relevance     | Personalization |
+| :-------------- | :---------------- | :------------ | :-------------- |
+| Without Memory  | Low               | Generic       | None            |
+| With Memory     | High              | Context-aware | Personalized   |
+
+### 📝 Benchmark Execution
 
 The benchmark can be run locally to compare agent behavior with and without memory:
 
 ```bash
 PYTHONPATH=. python benchmark_memory.py
+```
 
+This script runs the same query twice—once with memory enabled and once after clearing memory—and prints both responses for qualitative comparison.
 
+---
 
 ## ⚠️ Known Failure Cases
 
@@ -196,44 +215,44 @@ Automated tests and controlled benchmarking help detect regressions related to m
 
 ## 📂 Project Structure
 
-```
 carebot-agent/
 │
-├── app/                                    # Core AI logic
-│   ├── __init__.py
-│   ├── main.py                            # Agent orchestration
-│   ├── router.py                          # Intent classification & routing
-│   ├── rag.py                             # Retrieval-Augmented Generation (RAG)
-│   ├── memory.py                          # Memory persistence layer
-│   ├── agent_care.py                      # Empathetic CareBot agent
-│   ├── agent_memory_extractor.py          # Long-term memory extraction agent
-│   ├── agent_planner.py                   # Planner logic for structured guidance
-│   ├── agent_memory.py                    # Memory agent utilities
-│   ├── safety.py                          # Safety & crisis handling
-│   └── tools.py                           # Shared helper utilities
+├── app/                          # Core AI logic
+│   ├── main.py                   # Agent orchestration
+│   ├── router.py                 # Intent classification & routing
+│   ├── rag.py                    # Retrieval-Augmented Generation (RAG)
+│   ├── memory.py                 # Memory persistence layer
+│   ├── agent_care.py             # Empathetic CareBot agent
+│   ├── agent_memory_extractor.py # Long-term memory extraction agent
+│   ├── agent_planner.py          # Planner logic for structured guidance
+│   ├── agent_memory.py           # Memory agent utilities
+│   ├── safety.py                 # Safety & crisis handling
+│   └── tools.py                  # Shared helper utilities
 │
-├── config/                                # Configuration
-│   ├── __init__.py
-│   └── llm_config.py                      # Ollama / LLM configuration
+├── web/                          # Web layer
+│   ├── server.py                 # FastAPI + WebSocket server
+│   └── index.html                # Simple browser UI
 │
-├── web/                                   # Web layer
-│   ├── __init__.py
-│   ├── server.py                          # FastAPI + WebSocket server
-│   └── index.html                         # Simple browser UI
+├── config/
+│   └── llm_config.py             # Ollama / LLM configuration
 │
-├── streamlit_app.py                       # Optional Streamlit UI
+├── tests/                        # Test suite
+│   ├── test_memory_retrieval.py  # Memory retrieval tests
+│   └── test_rag_regression.py    # RAG stability tests
 │
-├── memory.json                            # Stored long-term memory (JSON-based)
-├── memory.index                           # FAISS index (if enabled)
+├── streamlit_app.py              # Optional Streamlit UI
+├── benchmark_memory.py           # Memory benchmark script
 │
-├── Dockerfile                             # Docker image for the app
-├── docker-compose.yml                     # Run App + Ollama together
-├── .dockerignore                          # Docker ignore rules
+├── memory.json                   # Stored long-term memory (JSON-based)
+├── memory.index                  # FAISS index (auto-generated)
 │
-├── .gitignore                             # Git ignore rules
-├── requirements.txt                       # Python dependencies
-└── README.md                              # Project documentation
-```
+├── Dockerfile                    # Docker image for the app
+├── docker-compose.yml            # Run App + Ollama together
+├── .dockerignore                 # Docker ignore rules
+│
+├── .gitignore                    # Git ignore rules
+├── requirements.txt              # Python dependencies
+└── README.md                     # Project documentation
 
 
 
@@ -393,7 +412,50 @@ Basic automated tests are included to validate system stability and memory behav
 - **Memory retrieval tests** ensure that stored facts can be retrieved when relevant.
 - **RAG regression tests** verify that agent responses remain non-empty and stable across runs.
 
-Tests are executed using `pytest` with async support to match the system’s execution model.
+Tests are executed using `pytest` with async support to match the system's execution model.
+
+### Running Tests
+
+#### 1️⃣ Install Testing Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+This installs `pytest` and `pytest-asyncio` (already in `requirements.txt`).
+
+#### 2️⃣ Run All Tests
+
+```bash
+pytest tests/
+```
+
+#### 3️⃣ Run Specific Tests
+
+```bash
+# Test memory retrieval
+pytest tests/test_memory_retrieval.py -v
+
+# Test RAG response stability
+pytest tests/test_rag_regression.py -v
+```
+
+#### 4️⃣ Run with Output
+
+```bash
+pytest tests/ -v -s
+```
+
+### Test Coverage
+
+- **`test_memory_retrieval.py`**: Validates that stored memories can be retrieved via semantic search
+- **`test_rag_regression.py`**: Ensures asking the same question twice returns non-empty, stable responses
+
+### What Tests Validate
+
+✅ **Memory Retrieval**: Stored facts are correctly retrieved when relevant  
+✅ **Response Stability**: System doesn't crash or return empty responses  
+✅ **Error Handling**: Graceful degradation when memory is empty
 
 
 

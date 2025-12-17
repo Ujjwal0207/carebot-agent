@@ -13,3 +13,6 @@ memory.json
 
 # OS
 .DS_Store
+
+# Documentation (local only)
+ADVANCEMENTS.md

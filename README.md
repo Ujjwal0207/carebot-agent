@@ -47,19 +47,19 @@ This is **not a simple chatbot** — it is a **multi-agent AI system** designed 
 
 ```mermaid
 flowchart TD
-    U[User<br/>(Browser UI)]
-    WS[FastAPI Server<br/>web/server.py]
-    ORCH[Agent Orchestrator<br/>app/main.py<br/>run_agent()]
-    ROUTER[Intent Router<br/>app/router.py]
-    SAFE[Safety Handler<br/>safety.py]
+    User[User Browser UI]
+    WS[FastAPI Server]
+    ORCH[Agent Orchestrator]
+    ROUTER[Intent Router]
+    SAFE[Safety Handler]
     CARE[Care Mode]
     PLAN[Planner Mode]
-    RAG[RAG Context Builder<br/>rag.py]
-    AGENT[CareBot Agent<br/>AutoGen + Ollama]
-    MEM[Memory Extractor Agent<br/>JSON Output]
-    STORE[Long-Term Memory<br/>memory.json]
+    RAG[RAG Context Builder]
+    AGENT[CareBot Agent]
+    MEM[Memory Extractor]
+    STORE[Long-Term Memory]
 
-    U -->|WebSocket| WS
+    User -->|WebSocket| WS
     WS --> ORCH
     ORCH --> ROUTER
 
@@ -75,7 +75,19 @@ flowchart TD
     MEM --> STORE
 
     AGENT -->|Response| WS
-    WS -->|WebSocket| U
+    WS -->|WebSocket| User
+
+    style User fill:#e1f5ff,stroke:#0066cc,stroke-width:2px
+    style WS fill:#fff4e1,stroke:#cc6600,stroke-width:2px
+    style ORCH fill:#ffe1f5,stroke:#cc0066,stroke-width:2px
+    style ROUTER fill:#e1ffe1,stroke:#00cc00,stroke-width:2px
+    style SAFE fill:#ffcccc,stroke:#cc0000,stroke-width:2px
+    style CARE fill:#ccffcc,stroke:#00cc00,stroke-width:2px
+    style PLAN fill:#ccccff,stroke:#0000cc,stroke-width:2px
+    style RAG fill:#ffffcc,stroke:#cccc00,stroke-width:2px
+    style AGENT fill:#ffccff,stroke:#cc00cc,stroke-width:2px
+    style MEM fill:#ccffff,stroke:#00cccc,stroke-width:2px
+    style STORE fill:#f0f0f0,stroke:#666666,stroke-width:2px
 ```
 
 

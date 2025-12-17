@@ -1,0 +1,22 @@
+__pycache__/
+*.pyc
+.venv/
+env/
+.env
+
+# Git & editor metadata
+.git
+.gitignore
+.cursor
+.DS_Store
+
+# Local data & indexes (rebuilt inside container if needed)
+memory.index
+memory.json
+
+# Python build artifacts
+*.egg-info
+dist/
+build/
+
+

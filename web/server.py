@@ -9,16 +9,29 @@ from app.main import run_agent
 app = FastAPI()
 
 
-def _stream_text_chunks(text: str, chunk_size: int = 8):
+def _stream_text_chunks(text: str, words_per_chunk: int = 4):
     """
-    Yield small chunks of the final response so the frontend
-    can render them incrementally and feel like token streaming.
+    Yield small word-based chunks of the final response so the frontend
+    can render them incrementally and feel closer to token streaming.
 
     NOTE: We are *not* changing how the LLM is called – only how
     we send the final string over the WebSocket.
     """
-    for i in range(0, len(text), chunk_size):
-        yield text[i : i + chunk_size]
+    if not text:
+        return
+
+    words = text.split(" ")
+    current = []
+
+    for w in words:
+        current.append(w)
+        if len(current) >= words_per_chunk:
+            yield " ".join(current) + " "
+            current = []
+
+    if current:
+        # Flush any remaining words
+        yield " ".join(current)
 
 
 @app.get("/")

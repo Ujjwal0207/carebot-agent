@@ -11,6 +11,7 @@ from config.llm_config import config_list
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
+# We wrap the raw config_list exactly as AutoGen expects.
 llm_config = {"config_list": config_list}
 
 carebot = create_carebot(llm_config)
@@ -21,11 +22,18 @@ memory_extractor = create_memory_extractor(llm_config)
 # ----------------------------
 CHAT_HISTORY = defaultdict(lambda: deque(maxlen=6))
 
-# 🔧 ANTI-REPETITION CACHE (CRITICAL)
+# 🔧 ANTI-REPETITION CACHE (PER-SESSION)
 LAST_RESPONSE_CACHE = {}
 
 
 def planner_prompt(user_message: str) -> str:
+    """
+    Helper prompt for the internal planning mode.
+
+    NOTE: This does not call the model directly. It just builds
+    structured text that we feed into the main CareBot so the
+    final reply stays coherent and empathetic.
+    """
     return f"""
 You are a planning assistant.
 Give short bullet-point steps only.
@@ -38,6 +46,8 @@ User message:
 
 
 async def run_agent(user_message: str) -> str:
+    # For now we treat the browser as a single shared session.
+    # If you add authentication later, you can plug in a real user/session id here.
     session_id = "web-session"
 
     # 1️⃣ ROUTING
@@ -73,7 +83,19 @@ async def run_agent(user_message: str) -> str:
             ]
         )
 
-        final_response = reply.strip()
+        # AutoGen can sometimes return dicts / lists; normalize to a string.
+        if isinstance(reply, dict):
+            reply = reply.get("content") or json.dumps(reply)
+        elif isinstance(reply, list):
+            # Join any message-like objects into a readable string.
+            reply = " ".join(
+                (
+                    (m.get("content") if isinstance(m, dict) else str(m))
+                    for m in reply
+                )
+            )
+
+        final_response = str(reply).strip()
         LAST_RESPONSE_CACHE[session_id] = final_response
         return final_response
 
@@ -99,6 +121,22 @@ Respond empathetically and practically.
 
     # 5️⃣ LLM CALL (AutoGen – correct usage)
     reply = carebot.generate_reply(messages=messages)
+
+    # ---------------------------------------------------------
+    # Robust normalization: AutoGen may return a string, dict,
+    # or list of message-like objects depending on config.
+    # We always convert it into a clean string here so the rest
+    # of the pipeline (memory + streaming) can rely on it.
+    # ---------------------------------------------------------
+    if isinstance(reply, dict):
+        reply = reply.get("content") or json.dumps(reply)
+    elif isinstance(reply, list):
+        reply = " ".join(
+            (
+                (m.get("content") if isinstance(m, dict) else str(m))
+                for m in reply
+            )
+        )
 
     if not reply or not isinstance(reply, str):
         reply = (

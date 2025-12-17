@@ -215,44 +215,52 @@ Automated tests and controlled benchmarking help detect regressions related to m
 
 ## 📂 Project Structure
 
+```
 carebot-agent/
 │
-├── app/                          # Core AI logic
-│   ├── main.py                   # Agent orchestration
-│   ├── router.py                 # Intent classification & routing
-│   ├── rag.py                    # Retrieval-Augmented Generation (RAG)
-│   ├── memory.py                 # Memory persistence layer
-│   ├── agent_care.py             # Empathetic CareBot agent
-│   ├── agent_memory_extractor.py # Long-term memory extraction agent
-│   ├── agent_planner.py          # Planner logic for structured guidance
-│   ├── agent_memory.py           # Memory agent utilities
-│   ├── safety.py                 # Safety & crisis handling
-│   └── tools.py                  # Shared helper utilities
+├── app/                                    # Core AI logic
+│   ├── __init__.py
+│   ├── main.py                            # Agent orchestration entry point
+│   ├── router.py                          # Intent classification & routing
+│   ├── rag.py                             # Retrieval-Augmented Generation (RAG)
+│   ├── memory.py                          # Long-term memory persistence (FAISS + JSON)
+│   ├── agent_care.py                      # Empathetic CareBot agent
+│   ├── agent_memory.py                    # Memory utilities
+│   ├── agent_memory_extractor.py          # Long-term memory extraction agent
+│   ├── agent_planner.py                   # Planner / guidance agent
+│   ├── safety.py                          # Safety & crisis handling logic
+│   └── tools.py                           # Shared helper utilities
 │
-├── web/                          # Web layer
-│   ├── server.py                 # FastAPI + WebSocket server
-│   └── index.html                # Simple browser UI
+├── config/                                # Configuration
+│   ├── __init__.py
+│   └── llm_config.py                      # Ollama / LLM configuration
 │
-├── config/
-│   └── llm_config.py             # Ollama / LLM configuration
+├── web/                                   # Web layer
+│   ├── __init__.py
+│   ├── server.py                          # FastAPI + WebSocket server
+│   └── index.html                         # Minimal real-time browser UI
 │
-├── tests/                        # Test suite
-│   ├── test_memory_retrieval.py  # Memory retrieval tests
-│   └── test_rag_regression.py    # RAG stability tests
+├── tests/                                 # Automated tests
+│   ├── __init__.py
+│   ├── test_memory_retrieval.py           # Memory retrieval validation
+│   └── test_rag_regression.py             # RAG response stability tests
 │
-├── streamlit_app.py              # Optional Streamlit UI
-├── benchmark_memory.py           # Memory benchmark script
+├── benchmark_memory.py                    # Memory vs no-memory benchmark script
 │
-├── memory.json                   # Stored long-term memory (JSON-based)
-├── memory.index                  # FAISS index (auto-generated)
+├── memory.json                            # Persistent long-term memory store
+├── memory.index                           # FAISS vector index (auto-generated)
 │
-├── Dockerfile                    # Docker image for the app
-├── docker-compose.yml            # Run App + Ollama together
-├── .dockerignore                 # Docker ignore rules
+├── streamlit_app.py                       # Optional Streamlit UI
 │
-├── .gitignore                    # Git ignore rules
-├── requirements.txt              # Python dependencies
-└── README.md                     # Project documentation
+├── requirements.txt                       # Python dependencies
+│
+├── Dockerfile                             # Docker image definition
+├── docker-compose.yml                     # Docker Compose (Ollama + App)
+├── .dockerignore                          # Docker ignore rules
+│
+├── .gitignore                             # Git ignore rules
+└── README.md                              # Project documentation
+```
 
 
 

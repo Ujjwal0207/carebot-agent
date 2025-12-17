@@ -18,6 +18,9 @@ ws.onmessage = e => {
   const d = JSON.parse(e.data);
 
   if (d.type === "thinking") {
+    // Starting a new response turn: reset any stale assistant bubble
+    currentAssistantLi = null;
+
     // Show a single "Thinking..." item while backend works
     thinking = document.createElement("li");
     thinking.innerText = "🤖 Thinking...";
@@ -64,6 +67,10 @@ ws.onmessage = e => {
       thinking.remove();
       thinking = null;
     }
+
+    // Also reset any partially-streamed assistant message so the
+    // next reply starts fresh and does not append to old content.
+    currentAssistantLi = null;
 
     const li = document.createElement("li");
     li.innerText = "⚠️ " + d.content;

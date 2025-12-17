@@ -26,6 +26,51 @@ CHAT_HISTORY = defaultdict(lambda: deque(maxlen=6))
 LAST_RESPONSE_CACHE = {}
 
 
+def _normalize_reply(reply) -> str:
+    """
+    Convert the raw AutoGen reply into a clean string.
+
+    - If reply is None, return an empty string so callers can trigger
+      the friendly fallback message instead of sending 'None' to users.
+    - Dict replies: prefer explicit 'content' key when present (even if empty).
+    - List replies: join message-like objects into a readable string,
+      skipping None values so join() never crashes.
+    """
+    # Explicitly treat None as "no content"
+    if reply is None:
+        return ""
+
+    # Already a plain string
+    if isinstance(reply, str):
+        return reply
+
+    # Dict reply: prefer explicit "content" key if present (even if empty)
+    if isinstance(reply, dict):
+        if "content" in reply:
+            return "" if reply["content"] is None else str(reply["content"])
+        return json.dumps(reply)
+
+    # List reply: join any message-like objects into a readable string
+    if isinstance(reply, list):
+        parts = []
+        for m in reply:
+            if isinstance(m, dict):
+                val = m.get("content") if "content" in m else None
+            else:
+                val = m
+
+            if val is None:
+                # Skip explicit Nones so join() cannot fail
+                continue
+
+            parts.append(str(val))
+
+        return " ".join(parts)
+
+    # Fallback for any other type
+    return str(reply)
+
+
 def planner_prompt(user_message: str) -> str:
     """
     Helper prompt for the internal planning mode.
@@ -83,19 +128,17 @@ async def run_agent(user_message: str) -> str:
             ]
         )
 
-        # AutoGen can sometimes return dicts / lists; normalize to a string.
-        if isinstance(reply, dict):
-            reply = reply.get("content") or json.dumps(reply)
-        elif isinstance(reply, list):
-            # Join any message-like objects into a readable string.
-            reply = " ".join(
-                (
-                    (m.get("content") if isinstance(m, dict) else str(m))
-                    for m in reply
-                )
+        # Normalize whatever AutoGen returns into a clean string.
+        final_response = _normalize_reply(reply).strip()
+
+        # If normalization still leaves us with empty text, use the
+        # same friendly fallback message as the main path.
+        if not final_response:
+            final_response = (
+                "Hi there, it’s good to hear from you. "
+                "How are you feeling today?"
             )
 
-        final_response = str(reply).strip()
         LAST_RESPONSE_CACHE[session_id] = final_response
         return final_response
 
@@ -124,25 +167,19 @@ Respond empathetically and practically.
 
     # ---------------------------------------------------------
     # Robust normalization: AutoGen may return a string, dict,
-    # or list of message-like objects depending on config.
-    # We always convert it into a clean string here so the rest
-    # of the pipeline (memory + streaming) can rely on it.
+    # list of message-like objects, or even None. We always
+    # convert it into a clean string here so the rest of the
+    # pipeline (memory + streaming) can rely on it.
     # ---------------------------------------------------------
-    if isinstance(reply, dict):
-        reply = reply.get("content") or json.dumps(reply)
-    elif isinstance(reply, list):
-        reply = " ".join(
-            (
-                (m.get("content") if isinstance(m, dict) else str(m))
-                for m in reply
-            )
-        )
+    reply_str = _normalize_reply(reply)
 
-    if not reply or not isinstance(reply, str):
+    if not reply_str or not isinstance(reply_str, str):
         reply = (
             "I’m here with you. "
             "Can you tell me a bit more about what’s been on your mind?"
         )
+    else:
+        reply = reply_str
 
     final_response = reply.strip()
 

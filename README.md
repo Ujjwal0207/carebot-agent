@@ -159,33 +159,44 @@ This keeps responses safe, relevant, and predictable.
 
 ## 📂 Project Structure
 
+```
 carebot-agent/
 │
-├── app/                          # Core AI logic
-│   ├── main.py                   # Agent orchestration
-│   ├── router.py                 # Intent classification & routing
-│   ├── rag.py                    # Retrieval-Augmented Generation (RAG)
-│   ├── memory.py                 # Memory persistence layer
-│   ├── agent_care.py             # Empathetic CareBot agent
-│   ├── agent_memory_extractor.py # Long-term memory extraction agent
-│   ├── safety.py                 # Safety & crisis handling logic
-│   └── tools.py                  # Shared utilities
+├── app/                                    # Core AI logic
+│   ├── __init__.py
+│   ├── main.py                            # Agent orchestration
+│   ├── router.py                          # Intent classification & routing
+│   ├── rag.py                             # Retrieval-Augmented Generation (RAG)
+│   ├── memory.py                          # Memory persistence layer
+│   ├── agent_care.py                      # Empathetic CareBot agent
+│   ├── agent_memory_extractor.py          # Long-term memory extraction agent
+│   ├── agent_planner.py                   # Planner logic for structured guidance
+│   ├── agent_memory.py                    # Memory agent utilities
+│   ├── safety.py                          # Safety & crisis handling
+│   └── tools.py                           # Shared helper utilities
 │
-├── web/                          # Web layer
-│   ├── server.py                 # FastAPI + WebSocket server
-│   └── index.html                # Minimal real-time UI
+├── config/                                # Configuration
+│   ├── __init__.py
+│   └── llm_config.py                      # Ollama / LLM configuration
 │
-├── config/
-│   └── llm_config.py             # Ollama / LLM configuration
+├── web/                                   # Web layer
+│   ├── __init__.py
+│   ├── server.py                          # FastAPI + WebSocket server
+│   └── index.html                         # Simple browser UI
 │
-├── memory.json                   # Persistent long-term memory
-├── memory.index                  # FAISS index file (auto-generated)
-├── requirements.txt              # Python dependencies
-├── Dockerfile                    # Docker image definition
-├── docker-compose.yml            # Docker Compose configuration (Ollama + app)
-├── .dockerignore                 # Files excluded from Docker builds
-├── streamlit_app.py              # Optional Streamlit UI
-└── README.md
+├── streamlit_app.py                       # Optional Streamlit UI
+│
+├── memory.json                            # Stored long-term memory (JSON-based)
+├── memory.index                           # FAISS index (if enabled)
+│
+├── Dockerfile                             # Docker image for the app
+├── docker-compose.yml                     # Run App + Ollama together
+├── .dockerignore                          # Docker ignore rules
+│
+├── .gitignore                             # Git ignore rules
+├── requirements.txt                       # Python dependencies
+└── README.md                              # Project documentation
+```
 
 
 
